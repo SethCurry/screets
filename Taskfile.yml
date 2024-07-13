@@ -1,0 +1,15 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  build:
+    cmds:
+      - npm run build
+  deploy:
+    deps: [build]
+    cmds:
+      - npx grunt screeps
