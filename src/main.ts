@@ -28,6 +28,20 @@ declare global {
   }
 }
 
+interface Position {
+  x: number;
+  y: number;
+}
+
+function doOrMove(creep: Creep, target: Position, withinRange: number, fn: () => void) {
+  if (creep.pos.getRangeTo(target.x, target.y) <= withinRange) {
+     fn();
+  } else {
+    creep.moveTo(target.x, target.y)
+  }
+  return
+}
+
 // Removes any entries in Memory.creeps for creeps that do not exist in Game.creeps.
 // This prevents leaking memory as creeps die.
 function deleteMemoryOfMissingCreeps() {
@@ -73,11 +87,7 @@ function naiveHarvesting() {
 
     const source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
 
-    if (creep.pos.getRangeTo(source.pos.x, source.pos.y) <= 1) {
-      creep.harvest(source);
-    } else {
-      creep.moveTo(source.pos.x, source.pos.y);
-    }
+    doOrMove(creep, source.pos, 1, () => { creep.harvest(source) });
   }
 }
 
@@ -94,22 +104,16 @@ function naiveGathering() {
     if (creep.store.getFreeCapacity() > 0) {
       const resource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES) as Resource;
 
-      if (creep.pos.getRangeTo(resource.pos.x, resource.pos.y) > 1) {
-        creep.moveTo(resource.pos.x, resource.pos.y);
-      } else {
+      doOrMove(creep, resource.pos, 1, () => {
         creep.pickup(resource);
-      }
-    } else {
-        creep.moveTo(creep.room.controller.pos.x, creep.room.controller.pos.y);
+      })
     }
+
     if (creep.pos.getRangeTo(creep.room.controller.pos.x, creep.room.controller.pos.y) <= 2 && creep.store.getUsedCapacity() > 0) {
       creep.transfer(creep.room.controller, RESOURCE_ENERGY);
     }
   }
 }
-
-// doOrMove function that will either perform action if the screep is close enough,
-// or move towards the target if not
 
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
