@@ -101,7 +101,16 @@ function naiveGathering(logger: Logger) {
       continue
     }
 
+    if (creep.pos.getRangeTo(creep.room.controller.pos.x, creep.room.controller.pos.y) <= 2 && creep.store.getUsedCapacity() > 0) {
+      logger.debug("gatherer still near controller; continuing transfer", { name: creepName })
+
+      creep.transfer(creep.room.controller, RESOURCE_ENERGY);
+      continue
+    }
+
     if (creep.store.getFreeCapacity() > 0) {
+      logger.debug("gatherer has free capacity; looking for dropped resources", { name: creepName })
+
       const resource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES) as Resource;
 
       doOrMove(creep, resource.pos, 1, () => {
@@ -109,9 +118,7 @@ function naiveGathering(logger: Logger) {
       })
     }
 
-    if (creep.pos.getRangeTo(creep.room.controller.pos.x, creep.room.controller.pos.y) <= 2 && creep.store.getUsedCapacity() > 0) {
-      creep.transfer(creep.room.controller, RESOURCE_ENERGY);
-    }
+
   }
 }
 
@@ -120,7 +127,7 @@ function naiveGathering(logger: Logger) {
 export const loop = ErrorMapper.wrapLoop(() => {
   const logger = new Logger("main", LogLevel.DEBUG);
 
-  console.log(`Current game tick is ${Game.time}`);
+  logger.info("Starting game tick", { tick: Game.time });
 
   const scheduler = new Scheduler();
 
