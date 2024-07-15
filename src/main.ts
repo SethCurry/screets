@@ -1,4 +1,6 @@
 import { Intent } from "intent";
+import { EveryXTicks, Scheduler } from "kernel";
+import { Logger } from "logging";
 import { ErrorMapper } from "utils/ErrorMapper";
 
 declare global {
@@ -44,10 +46,11 @@ function doOrMove(creep: Creep, target: Position, withinRange: number, fn: () =>
 
 // Removes any entries in Memory.creeps for creeps that do not exist in Game.creeps.
 // This prevents leaking memory as creeps die.
-function deleteMemoryOfMissingCreeps() {
+function deleteMemoryOfMissingCreeps(logger: Logger) {
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {
     if (!(name in Game.creeps)) {
+      logger.debug(`deleting creep memory for non-existing creep`, {name: name});
       delete Memory.creeps[name];
     }
   }
@@ -55,8 +58,8 @@ function deleteMemoryOfMissingCreeps() {
 
 // cleanupPhase calls all of the functions that do some form of cleanup after the tick
 // is over.
-function cleanupPhase() {
-  deleteMemoryOfMissingCreeps();
+function cleanupPhase(logger: Logger) {
+  deleteMemoryOfMissingCreeps(logger.child("deleteMemoryOfMissingCreeps"));
 }
 
 function basicSpawnCreeps(spawnName: string, maxCreeps: number) {
@@ -73,7 +76,7 @@ function basicSpawnHarvesters(spawnName: string, maxHarvesters: number) {
   }
 }
 
-function naiveHarvesting() {
+function naiveHarvesting(logger: Logger) {
   for (const creepName in Game.creeps) {
     if (!creepName.startsWith("Worker")) {
       continue;
@@ -91,7 +94,7 @@ function naiveHarvesting() {
   }
 }
 
-function naiveGathering() {
+function naiveGathering(logger: Logger) {
   for (const creepName in Game.creeps) {
     if (!creepName.startsWith("Harvester")) continue;
 
@@ -120,9 +123,12 @@ function naiveGathering() {
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`Current game tick is ${Game.time}`);
 
-  cleanupPhase();
-  basicSpawnCreeps("Spawn1", 5);
-  basicSpawnHarvesters("Spawn1", 2);
-  naiveHarvesting();
-  naiveGathering();
+  const scheduler = new Scheduler();
+  scheduler.addTask("spawnBasicCreeps", EveryXTicks(1), (logger: Logger) => {basicSpawnCreeps("Spawn1", 5)})
+  scheduler.addTask("spawnHarvesterCreeps", EveryXTicks(1), (logger: Logger) => {basicSpawnHarvesters("Spawn1", 2)})
+  scheduler.addTask("doHarvesting", EveryXTicks(1), naiveHarvesting)
+  scheduler.addTask("doGathering", EveryXTicks(1), naiveGathering)
+  scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase)
+
+  scheduler.schedule();
 });
