@@ -36,9 +36,11 @@ export function EveryXTicks(x: number): ScheduleCondition {
 // them to be delayed or run early.
 export class Scheduler {
   private tasks: Task[];
+  private logger: Logger;
 
-  constructor() {
+  constructor(logger: Logger) {
     this.tasks = [];
+    this.logger = logger;
   }
 
   // Add a task to be run by the scheduler

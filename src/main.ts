@@ -1,3 +1,4 @@
+import config from "config";
 import { Intent } from "intent";
 import { EveryXTicks, Scheduler } from "kernel";
 import { Logger, LogLevel } from "logging";
@@ -81,13 +82,14 @@ function naiveMining(logger: Logger) {
 
     const creep = Game.creeps[creepName];
     if (Game.time % 10 == 0) {
+      logger.debug("miner dropping resources", {name: creepName})
       creep.drop(RESOURCE_ENERGY);
+    } else {
+      logger.debug("miner mining", {name: creepName})
+      const source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
+
+      doOrMove(creep, source.pos, 1, () => { creep.harvest(source) });
     }
-
-
-    const source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
-
-    doOrMove(creep, source.pos, 1, () => { creep.harvest(source) });
   }
 }
 
@@ -125,11 +127,11 @@ function naiveGathering(logger: Logger) {
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  const logger = new Logger("main", LogLevel.DEBUG);
+  const logger = new Logger("main", config.logLevel);
 
   logger.info("Starting game tick", { tick: Game.time });
 
-  const scheduler = new Scheduler();
+  const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
 
   scheduler.addTask("spawnMiners", EveryXTicks(1), (logger: Logger) => {
     basicSpawn(logger, "Spawn1", [WORK, MOVE], 5, "Miner")
