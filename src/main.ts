@@ -134,11 +134,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
 
   scheduler.addTask("spawnMiners", EveryXTicks(1), (logger: Logger) => {
-    basicSpawn(logger, "Spawn1", [WORK, MOVE], 5, "Miner")
+    basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners, "Miner")
   })
 
   scheduler.addTask("spawnBasicCreeps", EveryXTicks(1), (logger: Logger) => {
-    basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], 3, "Gatherer")
+    basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], config.spawning.gatherers, "Gatherer")
   })
 
   scheduler.addTask("doHarvesting", EveryXTicks(1), naiveMining)
