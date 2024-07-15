@@ -1,6 +1,6 @@
 import { Intent } from "intent";
 import { EveryXTicks, Scheduler } from "kernel";
-import { Logger } from "logging";
+import { Logger, LogLevel } from "logging";
 import { ErrorMapper } from "utils/ErrorMapper";
 
 declare global {
@@ -62,23 +62,20 @@ function cleanupPhase(logger: Logger) {
   deleteMemoryOfMissingCreeps(logger.child("deleteMemoryOfMissingCreeps"));
 }
 
-function basicSpawnCreeps(spawnName: string, maxCreeps: number) {
-  for (let i = 0; i < maxCreeps; ++i) {
-    const name = "Worker" + i.toString();
-    Game.spawns[spawnName].spawnCreep([WORK, MOVE], name);
+function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[], maxNumber: number, baseName: string) {
+  for (let i = 0; i < maxNumber; ++i) {
+    const name = baseName + i.toString();
+
+    if (Game.creeps[name] === undefined) {
+      logger.info("spawning creep", {name: name})
+      Game.spawns[spawnName].spawnCreep(parts, name);
+    }
   }
 }
 
-function basicSpawnHarvesters(spawnName: string, maxHarvesters: number) {
-  for (let i = 0; i < maxHarvesters; ++i) {
-    const name = "Harvester" + i.toString();
-    Game.spawns[spawnName].spawnCreep([WORK, CARRY, MOVE], name);
-  }
-}
-
-function naiveHarvesting(logger: Logger) {
+function naiveMining(logger: Logger) {
   for (const creepName in Game.creeps) {
-    if (!creepName.startsWith("Worker")) {
+    if (!creepName.startsWith("Miner")) {
       continue;
     }
 
@@ -96,7 +93,7 @@ function naiveHarvesting(logger: Logger) {
 
 function naiveGathering(logger: Logger) {
   for (const creepName in Game.creeps) {
-    if (!creepName.startsWith("Harvester")) continue;
+    if (!creepName.startsWith("Gatherer")) continue;
 
     const creep = Game.creeps[creepName];
 
@@ -121,12 +118,21 @@ function naiveGathering(logger: Logger) {
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
+  const logger = new Logger("main", LogLevel.DEBUG);
+
   console.log(`Current game tick is ${Game.time}`);
 
   const scheduler = new Scheduler();
-  scheduler.addTask("spawnBasicCreeps", EveryXTicks(1), (logger: Logger) => {basicSpawnCreeps("Spawn1", 5)})
-  scheduler.addTask("spawnHarvesterCreeps", EveryXTicks(1), (logger: Logger) => {basicSpawnHarvesters("Spawn1", 2)})
-  scheduler.addTask("doHarvesting", EveryXTicks(1), naiveHarvesting)
+
+  scheduler.addTask("spawnMiners", EveryXTicks(1), (logger: Logger) => {
+    basicSpawn(logger, "Spawn1", [WORK, MOVE], 5, "Miner")
+  })
+
+  scheduler.addTask("spawnBasicCreeps", EveryXTicks(1), (logger: Logger) => {
+    basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], 3, "Gatherer")
+  })
+
+  scheduler.addTask("doHarvesting", EveryXTicks(1), naiveMining)
   scheduler.addTask("doGathering", EveryXTicks(1), naiveGathering)
   scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase)
 
