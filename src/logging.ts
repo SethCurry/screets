@@ -20,8 +20,11 @@ function levelToString(level: LogLevel): string {
   }
 }
 
+// LogFields is a collection of fields to be appended to a log line.
 type LogFields = { [key: string]: any };
 
+// Converts the provided LogFields into a string that can
+// be appended to a log line.
 function fieldsToString(fields: LogFields): string {
   var str = '';
   for (var key in fields) {
@@ -59,22 +62,30 @@ export class Logger {
     console.log(`[${levelToString(level)}] ${this.name}: ${message} | ${fieldsString}`)
   }
 
+  // Creates a new child logger with the same level as this one.
+  // The new name for the logger will be "$parent.$child", and the
+  // provided fields will be merged with the existing fields on this
+  // logger.
   child(name: string, fields?: LogFields): Logger {
     return new Logger(`${this.name}.${name}`, this.level, { ...this.fields, ...fields });
   }
 
+  // Logs a new message at DEBUG level, if the current level is LogLeve.DEBUG or higher.
   debug(message: string, fields?: LogFields): void {
     this.log(LogLevel.DEBUG, message, fields);
   }
 
+  // Logs a new message at INFO level, if the current level is LogLevel.INFO or higher.
   info(message: string, fields?: LogFields): void {
     this.log(LogLevel.INFO, message, fields);
   }
 
+  // Logs a new message at WARN level, if the current level is LogLevel.WARN or higher.
   warn(message: string, fields?: LogFields): void {
     this.log(LogLevel.WARN, message, fields);
   }
 
+  // Logs a new message at ERROR level, if the current level is LogLeve.ERROR or higher.
   error(message: string, fields?: LogFields): void {
     this.log(LogLevel.ERROR, message, fields);
   }
