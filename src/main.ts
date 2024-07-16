@@ -20,7 +20,7 @@ declare global {
   }
 
   interface CreepMemory {
-    intent: Intent;
+    intent?: Intent;
   }
 
   // Syntax for adding proprties to `global` (ex "global.log")
@@ -107,10 +107,7 @@ function naiveGathering(logger: Logger) {
       logger.debug("gatherer still near controller; continuing transfer", { name: creepName })
 
       creep.transfer(creep.room.controller, RESOURCE_ENERGY);
-      continue
-    }
-
-    if (creep.store.getFreeCapacity() > 0) {
+    } else if (creep.store.getFreeCapacity() > 0) {
       logger.debug("gatherer has free capacity; looking for dropped resources", { name: creepName })
 
       const resource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES) as Resource;
@@ -118,9 +115,9 @@ function naiveGathering(logger: Logger) {
       doOrMove(creep, resource.pos, 1, () => {
         creep.pickup(resource);
       })
+    } else {
+      creep.moveTo(creep.room.controller);
     }
-
-
   }
 }
 
