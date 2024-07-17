@@ -1,8 +1,9 @@
 import config from "config";
-import { Intent } from "intent";
+import { Action, Intent } from "intent";
 import { EveryXTicks, Scheduler } from "kernel";
 import { Logger, LogLevel } from "logging";
 import { ErrorMapper } from "utils/ErrorMapper";
+import doOrMove from "utils/doOrMove";
 
 declare global {
   /*
@@ -31,20 +32,6 @@ declare global {
   }
 }
 
-interface Position {
-  x: number;
-  y: number;
-}
-
-function doOrMove(creep: Creep, target: Position, withinRange: number, fn: () => void) {
-  if (creep.pos.getRangeTo(target.x, target.y) <= withinRange) {
-     fn();
-  } else {
-    creep.moveTo(target.x, target.y)
-  }
-  return
-}
-
 // Removes any entries in Memory.creeps for creeps that do not exist in Game.creeps.
 // This prevents leaking memory as creeps die.
 function deleteMemoryOfMissingCreeps(logger: Logger) {
@@ -63,13 +50,15 @@ function cleanupPhase(logger: Logger) {
   deleteMemoryOfMissingCreeps(logger.child("deleteMemoryOfMissingCreeps"));
 }
 
-function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[], maxNumber: number, baseName: string) {
+function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[], maxNumber: number, baseName: string, getOptions?: () => SpawnOptions) {
   for (let i = 0; i < maxNumber; ++i) {
     const name = baseName + i.toString();
 
     if (Game.creeps[name] === undefined) {
-      logger.info("spawning creep", {name: name})
-      Game.spawns[spawnName].spawnCreep(parts, name);
+      logger.info("spawning creep", { name: name })
+
+      const options = getOptions ? getOptions() : {};
+      Game.spawns[spawnName].spawnCreep(parts, name, options);
     }
   }
 }
@@ -88,7 +77,7 @@ function naiveMining(logger: Logger) {
       logger.debug("miner mining", {name: creepName})
       const source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
 
-      doOrMove(creep, source.pos, 1, () => { creep.harvest(source) });
+      doOrMove(creep, source.pos, 1, () => { creep.harvest(source) }, logger);
     }
   }
 }
@@ -114,7 +103,7 @@ function naiveGathering(logger: Logger) {
 
       doOrMove(creep, resource.pos, 1, () => {
         creep.pickup(resource);
-      })
+      }, logger)
     } else {
       creep.moveTo(creep.room.controller);
     }
@@ -131,7 +120,22 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
 
   scheduler.addTask("spawnMiners", EveryXTicks(1), (logger: Logger) => {
-    basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners, "Miner")
+    basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners, "Miner", () => {
+      const source = Game.spawns["Spawn1"].pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+
+      if (source) {
+        return {
+          memory: {
+            intent: {
+              action: Action.MineSource,
+              target: source.id,
+            }
+          }
+        }
+      }
+
+      return {}
+    })
   });
 
   scheduler.addTask("spawnBasicCreeps", EveryXTicks(1), (logger: Logger) => {
