@@ -1,8 +1,10 @@
 import config from "./config";
-import { executeCreepIntent, Intent } from "./os/intent";
+import { Intent, IntentManager } from "./os/intent";
 import { EveryXTicks, Scheduler } from "./os/kernel";
 import { Logger } from "./utils/logging";
-import { assignPickupIntents, assignTransferIntents } from "tasks/pickup";
+import TransferIntent from "tasks/Transfer";
+import MineSource from "./tasks/MineSource";
+import Pickup from "./tasks/Pickup";
 import { spawnGatherersTask, spawnMinersTask } from "tasks/spawn";
 import { ErrorMapper } from "utils/ErrorMapper";
 
@@ -51,18 +53,16 @@ function cleanupPhase(logger: Logger) {
   deleteMemoryOfMissingCreeps(logger.child("deleteMemoryOfMissingCreeps"));
 }
 
-function executeActions(logger: Logger) {
-  for (const creepName in Game.creeps) {
-    const creep = Game.creeps[creepName];
-
-    executeCreepIntent(creep, logger);
-  }
-}
-
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
   const logger = new Logger("main", config.logLevel);
+
+  const intents = new IntentManager();
+
+  intents.registerIntent(TransferIntent);
+  intents.registerIntent(MineSource);
+  intents.registerIntent(Pickup);
 
   logger.info("Starting game tick", { tick: Game.time });
 
@@ -77,16 +77,13 @@ export const loop = ErrorMapper.wrapLoop(() => {
   // Configuration for how many to spawn is in config.ts
   scheduler.addTask("spawnGatherers", EveryXTicks(1), spawnGatherersTask);
 
-  // Add a task that runs every tick to look for creeps with full storage and no current intent
-  // to have them transfer their resources to some kind of storage.
-  scheduler.addTask("assignTransferTasks", EveryXTicks(1), assignTransferIntents);
+  scheduler.addTask("assignWork", EveryXTicks(1), (logger: Logger) => {
+    intents.assignTasks();
+  })
 
-  // Add a task that runs every tick to look for creeps that can carry resources, have no current intent,
-  // and do not have full storage.  Those creeps will be assigned to pick up a resource off the ground.
-  scheduler.addTask("assignPickupTasks", EveryXTicks(1), assignPickupIntents);
-
-  // Add a task that runs every tick to execute each creeps' intent.
-  scheduler.addTask("executeActions", EveryXTicks(1), executeActions);
+  scheduler.addTask("executeIntents", EveryXTicks(1), (logger: Logger) => {
+    intents.executeAllIntents(logger);
+  })
 
   // Add a task that runs every turn to do some cleanup, like deleting the memory of dead creeps.
   scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase);

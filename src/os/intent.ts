@@ -1,5 +1,5 @@
 import { Logger } from "../utils/logging";
-import doOrMove from "../utils/doOrMove";
+import { filterAllCreeps, filterCreeps, hasIntent, hasNoIntent } from "./inventory";
 
 export enum Action {
   MineSource = 1,
@@ -15,68 +15,64 @@ export interface Intent {
 
 type IntentExecutor = (creep: Creep, intent: Intent, logger: Logger) => void;
 
-function mineSourceExecutor(creep: Creep, intent: Intent, logger: Logger) {
-  // TODO change source if all available slots on the current source are occupied
-  const execLogger = logger.child("mining", { name: creep.name })
+export abstract class IntentHandler {
+  abstract execute(creep: Creep, intent: Intent, logger: Logger): void;
+  abstract action: Action;
+  abstract assignTasks(creeps: Creep[]): void;
+}
 
-  if (Game.time % 10 == 0) {
-    execLogger.debug("miner dropping resources")
-    creep.drop(RESOURCE_ENERGY);
-  } else {
-    const source = Game.getObjectById(intent.target) as Source
+export class BasicIntentHandler extends IntentHandler {
+  executor: IntentExecutor;
+  action: Action;
+  assignment: (creeps: Creep[]) => void;
 
-    doOrMove(creep, source.pos, 1, () => { creep.harvest(source) }, execLogger);
+  constructor(action: Action, executor: IntentExecutor, assignment: (creeps: Creep[]) => void) {
+    super()
+    this.action = action;
+    this.executor = executor;
+    this.assignment = assignment;
+  };
+
+  execute(creep: Creep, intent: Intent, logger: Logger) {
+    return this.executor (creep , intent, logger );
+  }
+
+  assignTasks(creeps: Creep[]) {
+    this.assignment(creeps);
   }
 }
 
-function pickupExecutor(creep: Creep, intent: Intent, logger: Logger) {
-  const execLogger = logger.child("pickup", { name : creep.name }) ;
-  const target = Game.getObjectById(intent.target) as Resource|null;
+export class IntentManager {
+  private handlers = new Map<Action, IntentHandler>();
 
-  if (creep.store.getFreeCapacity() === 0 || target === null) {
-    creep.memory.intent = undefined
-    return
+  constructor() {
   }
 
-  doOrMove(creep, target.pos, 1, () => {
-    execLogger.info("picking up resources");
-    creep.pickup(target);
-    creep.memory.intent = undefined;
-  }, logger)
-}
-
-function transferExecutor(creep: Creep, intent: Intent, logger: Logger) {
-  const execLogger = logger.child("transfer", { name: creep.name });
-
-  if (creep.store.getUsedCapacity() == 0) {
-    execLogger.debug("storage empty, unsetting transfer task");
-    creep.memory.intent = undefined;
-    return;
+  registerIntent(handlerClass: IntentHandler) {
+    this.handlers.set(handlerClass.action, handlerClass);
   }
 
-  const structure = Game.getObjectById(intent.target) as Structure;
-
-  doOrMove(creep, structure.pos, 2, () => {
-    execLogger.debug("starting transfer of resource");
-    creep.transfer(structure, RESOURCE_ENERGY);
-  }, logger)
-}
-
-
-export function executeCreepIntent(creep: Creep, logger: Logger) {
-  if (!creep.memory.intent) {
-    return
+  executeAllIntents(logger: Logger) {
+    filterAllCreeps(hasIntent).map((creep) => this.executeIntentForCreep(creep, logger))
   }
-  switch (creep.memory.intent.action) {
-    case Action.MineSource:
-      mineSourceExecutor(creep, creep.memory.intent, logger);
-      return;
-    case Action.Pickup:
-      pickupExecutor(creep, creep.memory.intent, logger);
-      return;
-    case Action.Transfer:
-      transferExecutor(creep, creep.memory.intent, logger);
-    default:
-      logger.error("unknown intent action", {intent: creep.memory.intent.action.toString()})
+
+  assignTasks() {
+    var creepsWithoutIntents = filterAllCreeps(hasNoIntent);
+
+    for (const handler of this.handlers.values()) {
+      handler.assignTasks(creepsWithoutIntents);
+
+      creepsWithoutIntents = filterCreeps(creepsWithoutIntents, hasNoIntent)
+    }
+  }
+
+  executeIntentForCreep(creep: Creep, logger: Logger) {
+    if (!creep.memory.intent) {
+      return
+    }
+
+    const intentHandler = this.handlers.get(creep.memory.intent.action);
+
+    intentHandler?.execute(creep, creep.memory.intent, logger)
   }
 }

@@ -23,6 +23,10 @@ export const hasNoIntent: CreepFilter = (creep: Creep) => {
   return creep.memory.intent === undefined
 }
 
+export const hasIntent: CreepFilter = (creep: Creep) => {
+  return creep.memory.intent !== undefined;
+}
+
 // hasAtLeastBodyParts is a CreepFilter that returns true for creeps with at least the given number
 // of the specified body part.
 export function hasAtLeastBodyParts(part: BodyPartConstant, partCount: number): CreepFilter {
