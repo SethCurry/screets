@@ -66,16 +66,29 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   logger.info("Starting game tick", { tick: Game.time });
 
+  // Create a new Scheduler that we can add tasks to.
   const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
 
+  // Add a task that runs every tick to spawn miners if any are missing.
+  // Configuration for how many to spawn is in config.ts
   scheduler.addTask("spawnMiners", EveryXTicks(1), spawnMinersTask);
+
+  // Add a task that runs every tick to spawn gatherers if any are missing.
+  // Configuration for how many to spawn is in config.ts
   scheduler.addTask("spawnGatherers", EveryXTicks(1), spawnGatherersTask);
 
+  // Add a task that runs every tick to look for creeps with full storage and no current intent
+  // to have them transfer their resources to some kind of storage.
   scheduler.addTask("assignTransferTasks", EveryXTicks(1), assignTransferIntents);
+
+  // Add a task that runs every tick to look for creeps that can carry resources, have no current intent,
+  // and do not have full storage.  Those creeps will be assigned to pick up a resource off the ground.
   scheduler.addTask("assignPickupTasks", EveryXTicks(1), assignPickupIntents);
 
+  // Add a task that runs every tick to execute each creeps' intent.
   scheduler.addTask("executeActions", EveryXTicks(1), executeActions);
 
+  // Add a task that runs every turn to do some cleanup, like deleting the memory of dead creeps.
   scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase);
 
   scheduler.schedule();

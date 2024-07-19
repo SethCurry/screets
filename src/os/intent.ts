@@ -31,9 +31,9 @@ function mineSourceExecutor(creep: Creep, intent: Intent, logger: Logger) {
 
 function pickupExecutor(creep: Creep, intent: Intent, logger: Logger) {
   const execLogger = logger.child("pickup", { name : creep.name }) ;
-  const target = Game.getObjectById(intent.target) as Resource;
+  const target = Game.getObjectById(intent.target) as Resource|null;
 
-  if (creep.store.getFreeCapacity() === 0) {
+  if (creep.store.getFreeCapacity() === 0 || target === null) {
     creep.memory.intent = undefined
     return
   }
