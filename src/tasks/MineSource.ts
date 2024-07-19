@@ -2,7 +2,7 @@ import doOrMove from "../utils/doOrMove";
 import { Action, BasicIntentHandler, Intent } from "../os/intent";
 import { Logger } from "../utils/logging";
 import { flatten } from "lodash";
-import { filterAllCreeps, filterCreeps, hasAtLeastBodyParts, hasTarget } from "../os/inventory";
+import { filterAllCreeps, filterCreeps, hasAtLeastBodyParts, hasTarget, lacksBodyPart } from "../os/inventory";
 import { createPrivateKey } from "crypto";
 
 function countAdjacentPlains(pos: RoomPosition) {
@@ -56,7 +56,7 @@ function mineSourceExecutor(creep: Creep, intent: Intent, logger: Logger) {
 }
 
 function assignMiners(creeps: Creep[], logger: Logger) {
-  filterCreeps(creeps, hasAtLeastBodyParts(WORK, 1)).forEach((creep: Creep) => {
+  filterCreeps(creeps, hasAtLeastBodyParts(WORK, 1), lacksBodyPart(CARRY)).forEach((creep: Creep) => {
     const sources = creep.room.find(FIND_SOURCES_ACTIVE);
 
     for (const source of sources) {

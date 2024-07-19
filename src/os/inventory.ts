@@ -33,6 +33,14 @@ export function hasTarget(target: Id<any>) {
   }
 }
 
+export function lacksBodyPart(part: BodyPartConstant): CreepFilter {
+  const impl = (creep: Creep) => {
+    return creep.getActiveBodyparts(part) === 0;
+  }
+
+  return impl;
+}
+
 // hasAtLeastBodyParts is a CreepFilter that returns true for creeps with at least the given number
 // of the specified body part.
 export function hasAtLeastBodyParts(part: BodyPartConstant, partCount: number): CreepFilter {
