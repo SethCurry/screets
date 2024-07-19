@@ -1,5 +1,5 @@
-import { Action } from "os/intent";
-import { filterAllCreeps, hasAtLeastBodyParts } from "os/inventory";
+import { Action } from "../os/intent";
+import { filterAllCreeps, hasAtLeastBodyParts } from "../os/inventory";
 import { Logger } from "utils/logging";
 
 export function assignPickupIntents(logger: Logger) {

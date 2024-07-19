@@ -1,5 +1,5 @@
-import { Logger } from "utils/logging";
-import doOrMove from "utils/doOrMove";
+import { Logger } from "../utils/logging";
+import doOrMove from "../utils/doOrMove";
 
 export enum Action {
   MineSource = 1,

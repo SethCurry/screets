@@ -1,7 +1,7 @@
-import config from "config";
-import { executeCreepIntent, Intent } from "os/intent";
-import { EveryXTicks, Scheduler } from "os/kernel";
-import { Logger } from "utils/logging";
+import config from "./config";
+import { executeCreepIntent, Intent } from "./os/intent";
+import { EveryXTicks, Scheduler } from "./os/kernel";
+import { Logger } from "./utils/logging";
 import { assignPickupIntents, assignTransferIntents } from "tasks/pickup";
 import { spawnGatherersTask, spawnMinersTask } from "tasks/spawn";
 import { ErrorMapper } from "utils/ErrorMapper";
