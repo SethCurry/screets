@@ -47,13 +47,7 @@ function mineSourceExecutor(creep: Creep, intent: Intent, logger: Logger) {
     return;
   }
 
-  if (Game.time % 10 == 0) {
-    execLogger.debug("miner dropping resources")
-    creep.drop(RESOURCE_ENERGY);
-  } else {
-
-    doOrMove(creep, source.pos, 1, () => { creep.harvest(source) }, execLogger);
-  }
+  doOrMove(creep, source.pos, 1, () => { creep.harvest(source) }, execLogger);
 }
 
 function assignMiners(creeps: Creep[]) {
