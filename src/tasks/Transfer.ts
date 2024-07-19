@@ -15,7 +15,7 @@ function assignTransferIntents(creepsWithoutIntents: Creep[], logger: Logger) {
     if (spawn) {
       const freeCapacity = spawn.store.getFreeCapacity(RESOURCE_ENERGY)
 
-      if (freeCapacity !== null && freeCapacity > creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
+      if (freeCapacity !== null && freeCapacity > 0) {
         target = spawn;
       }
     }

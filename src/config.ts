@@ -13,8 +13,8 @@ export default {
       preferred: 8,
     },
     gatherers: {
-      minimum: 1,
-      preferred: 5,
+      minimum: 3,
+      preferred: 6,
     },
   }
 }
