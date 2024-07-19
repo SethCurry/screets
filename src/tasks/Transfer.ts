@@ -52,7 +52,13 @@ function transferExecutor(creep: Creep, intent: Intent, logger: Logger) {
     return;
   }
 
-  doOrMove(creep, structure.pos, 1, () => {
+  var maxRange = 1;
+
+  if (structure.structureType === STRUCTURE_CONTROLLER) {
+    maxRange = 2;
+  }
+
+  doOrMove(creep, structure.pos, maxRange, () => {
     execLogger.debug("starting transfer of resource");
 
     const asStore = structure as AnyStoreStructure;
