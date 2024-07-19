@@ -56,7 +56,7 @@ function cleanupPhase(logger: Logger) {
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  const logger = new Logger("main", config.logLevel);
+  const logger = new Logger("main");
   logger.info("Starting game tick", { tick: Game.time });
 
   const intents = new IntentManager();
@@ -66,7 +66,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   intents.registerIntent(Pickup);
 
   // Create a new Scheduler that we can add tasks to.
-  const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
+  const scheduler = new Scheduler(new Logger("scheduler"));
 
   // Add a task that runs every tick to spawn miners if any are missing.
   // Configuration for how many to spawn is in config.ts

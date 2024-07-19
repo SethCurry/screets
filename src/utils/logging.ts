@@ -1,3 +1,5 @@
+import config from "config";
+
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
@@ -40,8 +42,8 @@ export class Logger {
   private name: string;
   private fields: LogFields;
 
-  constructor(name: string, level: LogLevel, fields?: LogFields) {
-    this.level = level;
+  constructor(name: string, fields?: LogFields) {
+    this.level = config.logLevel;
     this.name = name;
 
     if (fields) {
@@ -67,7 +69,11 @@ export class Logger {
   // provided fields will be merged with the existing fields on this
   // logger.
   child(name: string, fields?: LogFields): Logger {
-    return new Logger(`${this.name}.${name}`, this.level, { ...this.fields, ...fields });
+    return new Logger(`${this.name}.${name}`, { ...this.fields, ...fields });
+  }
+
+  with(field: LogFields): Logger {
+    return new Logger(this.name, { ...this.fields, ...field });
   }
 
   // Logs a new message at DEBUG level, if the current level is LogLeve.DEBUG or higher.
