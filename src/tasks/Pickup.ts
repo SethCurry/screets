@@ -3,7 +3,7 @@ import { Action, BasicIntentHandler, Intent } from "../os/intent";
 import { filterCreeps, hasAtLeastBodyParts } from "../os/inventory";
 import { Logger } from "utils/logging";
 
-export function assignPickupIntents(creeps: Creep[]) {
+export function assignPickupIntents(creeps: Creep[], logger: Logger) {
   const creepsToPickup = filterCreeps(creeps, hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() > 0);
 
   creepsToPickup.forEach((creep) => {

@@ -18,15 +18,15 @@ type IntentExecutor = (creep: Creep, intent: Intent, logger: Logger) => void;
 export abstract class IntentHandler {
   abstract execute(creep: Creep, intent: Intent, logger: Logger): void;
   abstract action: Action;
-  abstract assignTasks(creeps: Creep[]): void;
+  abstract assignTasks(creeps: Creep[], logger: Logger): void;
 }
 
 export class BasicIntentHandler extends IntentHandler {
   executor: IntentExecutor;
   action: Action;
-  assignment: (creeps: Creep[]) => void;
+  assignment: (creeps: Creep[], logger: Logger) => void;
 
-  constructor(action: Action, executor: IntentExecutor, assignment: (creeps: Creep[]) => void) {
+  constructor(action: Action, executor: IntentExecutor, assignment: (creeps: Creep[], logger: Logger) => void) {
     super()
     this.action = action;
     this.executor = executor;
@@ -37,8 +37,8 @@ export class BasicIntentHandler extends IntentHandler {
     return this.executor (creep , intent, logger );
   }
 
-  assignTasks(creeps: Creep[]) {
-    this.assignment(creeps);
+  assignTasks(creeps: Creep[], logger: Logger) {
+    this.assignment(creeps, logger);
   }
 }
 
@@ -56,11 +56,11 @@ export class IntentManager {
     filterAllCreeps(hasIntent).map((creep) => this.executeIntentForCreep(creep, logger))
   }
 
-  assignTasks() {
+  assignTasks(logger: Logger) {
     var creepsWithoutIntents = filterAllCreeps(hasNoIntent);
 
     for (const handler of this.handlers.values()) {
-      handler.assignTasks(creepsWithoutIntents);
+      handler.assignTasks(creepsWithoutIntents, logger);
 
       creepsWithoutIntents = filterCreeps(creepsWithoutIntents, hasNoIntent)
     }

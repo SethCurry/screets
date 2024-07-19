@@ -3,7 +3,7 @@ import { filterCreeps, hasAtLeastBodyParts } from "../os/inventory";
 import { Action, BasicIntentHandler, Intent } from "../os/intent";
 import doOrMove from "../utils/doOrMove";
 
-function assignTransferIntents(creepsWithoutIntents: Creep[]) {
+function assignTransferIntents(creepsWithoutIntents: Creep[], logger: Logger) {
   const creepsToTransfer = filterCreeps(creepsWithoutIntents, hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() === 0)
 
   creepsToTransfer.forEach((creep) => {

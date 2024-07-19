@@ -3,6 +3,7 @@ import { Action, BasicIntentHandler, Intent } from "../os/intent";
 import { Logger } from "../utils/logging";
 import { flatten } from "lodash";
 import { filterAllCreeps, filterCreeps, hasAtLeastBodyParts, hasTarget } from "../os/inventory";
+import { createPrivateKey } from "crypto";
 
 function countAdjacentPlains(pos: RoomPosition) {
   const room = Game.rooms[pos.roomName];
@@ -13,15 +14,19 @@ function countAdjacentPlains(pos: RoomPosition) {
 
   const terrain = room.getTerrain();
 
-  const resultsArray = [-1, 1].map(yOffset => {
-    return [-1, 1].map((xOffset: number): boolean => {
+  const resultsArray = [-1, 0, 1].map(yOffset => {
+    return [-1, 0, 1].map((xOffset: number): boolean => {
+      if (xOffset === 0 && yOffset === 0) {
+        return false;
+      }
+
       const terrainAt = terrain.get(pos.x + xOffset, pos.y + yOffset);
 
-      return terrainAt === 0;
+      return terrainAt !== 1;
     })
   })
 
-  return flatten([resultsArray]).filter(res => res).length;
+  return flatten(resultsArray).filter(res => res).length;
 }
 
 function mineSourceExecutor(creep: Creep, intent: Intent, logger: Logger) {
@@ -42,7 +47,7 @@ function mineSourceExecutor(creep: Creep, intent: Intent, logger: Logger) {
 
   const minersTargetingSource = filterAllCreeps(hasTarget(source.id)).length
 
-  if (minersTargetingSource > adjacentPlains) {
+  if (minersTargetingSource > adjacentPlains || source.energy === 0) {
     creep.memory.intent = undefined;
     return;
   }
@@ -50,21 +55,25 @@ function mineSourceExecutor(creep: Creep, intent: Intent, logger: Logger) {
   doOrMove(creep, source.pos, 1, () => { creep.harvest(source) }, execLogger);
 }
 
-function assignMiners(creeps: Creep[]) {
+function assignMiners(creeps: Creep[], logger: Logger) {
   filterCreeps(creeps, hasAtLeastBodyParts(WORK, 1)).forEach((creep: Creep) => {
     const sources = creep.room.find(FIND_SOURCES_ACTIVE);
 
-    sources.forEach((source: Source) => {
+    for (const source of sources) {
       const numMiners = filterAllCreeps(hasTarget(source.id)).length;
       const adjacentPlains = countAdjacentPlains(source.pos);
 
       if (numMiners < adjacentPlains) {
+        logger.debug("setting mining intent", {creepName: creep.name, sourcePos: `${source.pos.x}:${source.pos.y}`})
         creep.memory.intent = {
           action: Action.MineSource,
           target: source.id
         }
+        break;
+      } else {
+        logger.debug("source too occupied to mine", {creepName: creep.name, sourcePos: `${source.pos.x}:${source.pos.y}`, adjacentPlains: adjacentPlains, numMiners: numMiners})
       }
-    })
+    }
   })
 }
 

@@ -80,7 +80,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   scheduler.addTask("spawnMinersMinimum", EveryXTicks(1), spawnMinersMinimumTask);
 
   scheduler.addTask("assignWork", EveryXTicks(1), (logger: Logger) => {
-    intents.assignTasks();
+    intents.assignTasks(logger);
   })
 
   scheduler.addTask("executeIntents", EveryXTicks(1), (logger: Logger) => {
