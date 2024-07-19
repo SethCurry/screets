@@ -2,7 +2,7 @@ import { Action } from "intent";
 import { filterAllCreeps, hasAtLeastBodyParts } from "inventory";
 import { Logger } from "logging";
 
-export function assignPickupTasks(logger: Logger) {
+export function assignPickupIntents(logger: Logger) {
   const creepsToPickup = filterAllCreeps(hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() > 0);
 
   creepsToPickup.forEach((creep) => {
@@ -21,7 +21,7 @@ export function assignPickupTasks(logger: Logger) {
   })
 }
 
-export function assignTransferTasks(logger: Logger) {
+export function assignTransferIntents(logger: Logger) {
   const creepsToTransfer = filterAllCreeps(hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() === 0)
 
   creepsToTransfer.forEach((creep) => {

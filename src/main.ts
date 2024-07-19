@@ -1,11 +1,10 @@
 import config from "config";
 import { Action, executeCreepIntent, Intent } from "intent";
-import { filterAllCreeps, hasAtLeastBodyParts } from "inventory";
 import { EveryXTicks, Scheduler } from "kernel";
-import { Logger, LogLevel } from "logging";
-import { assignPickupTasks, assignTransferTasks } from "tasks/pickup";
+import { Logger } from "logging";
+import { assignPickupIntents, assignTransferIntents } from "tasks/pickup";
+import { spawnGatherersTask, spawnMinersTask } from "tasks/spawn";
 import { ErrorMapper } from "utils/ErrorMapper";
-import doOrMove from "utils/doOrMove";
 
 declare global {
   /*
@@ -52,55 +51,12 @@ function cleanupPhase(logger: Logger) {
   deleteMemoryOfMissingCreeps(logger.child("deleteMemoryOfMissingCreeps"));
 }
 
-function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[], maxNumber: number, baseName: string, getOptions?: () => SpawnOptions) {
-  for (let i = 0; i < maxNumber; ++i) {
-    const name = baseName + i.toString();
-
-    if (Game.creeps[name] === undefined) {
-      logger.info("spawning creep", { name: name });
-
-      const options = getOptions ? getOptions() : {};
-      Game.spawns[spawnName].spawnCreep(parts, name, options);
-    }
-  }
-}
-
 function executeActions(logger: Logger) {
   for (const creepName in Game.creeps) {
     const creep = Game.creeps[creepName];
 
     executeCreepIntent(creep, logger);
   }
-}
-
-function addSpawnTasks(scheduler: Scheduler) {
-  scheduler.addTask("spawnMiners", EveryXTicks(1), (logger: Logger) => {
-    basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners, "Miner", () => {
-      const source = Game.spawns["Spawn1"].pos.findClosestByPath(FIND_SOURCES_ACTIVE);
-
-      if (source) {
-        return {
-          memory: {
-            intent: {
-              action: Action.MineSource,
-              target: source.id,
-            }
-          }
-        }
-      }
-
-      return {}
-    })
-  });
-
-  scheduler.addTask("spawnGatherers", EveryXTicks(1), (logger: Logger) => {
-    basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], config.spawning.gatherers, "Gatherer")
-  });
-}
-
-function addWorkAssignmentTasks(scheduler: Scheduler) {
-  scheduler.addTask("assignTransferTasks", EveryXTicks(1), assignTransferTasks)
-  scheduler.addTask("assignPickupTasks", EveryXTicks(1), assignPickupTasks)
 }
 
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
@@ -112,11 +68,15 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
 
-  addSpawnTasks(scheduler);
-  addWorkAssignmentTasks(scheduler);
+  scheduler.addTask("spawnMiners", EveryXTicks(1), spawnMinersTask);
+  scheduler.addTask("spawnGatherers", EveryXTicks(1), spawnGatherersTask);
 
-  scheduler.addTask("executeActions", EveryXTicks(1), executeActions)
-  scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase)
+  scheduler.addTask("assignTransferTasks", EveryXTicks(1), assignTransferIntents);
+  scheduler.addTask("assignPickupTasks", EveryXTicks(1), assignPickupIntents);
+
+  scheduler.addTask("executeActions", EveryXTicks(1), executeActions);
+
+  scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase);
 
   scheduler.schedule();
 });
