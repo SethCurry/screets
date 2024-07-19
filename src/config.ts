@@ -1,4 +1,4 @@
-import { LogLevel } from "logging";
+import { LogLevel } from "utils/logging";
 
 export default {
   logLevel: LogLevel.DEBUG,

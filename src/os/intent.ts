@@ -1,4 +1,4 @@
-import { Logger } from "logging";
+import { Logger } from "utils/logging";
 import doOrMove from "utils/doOrMove";
 
 export enum Action {

@@ -1,4 +1,4 @@
-import { Logger, LogLevel } from "logging";
+import { Logger, LogLevel } from "utils/logging";
 
 // ScheduleCondition is a function used to determine
 // whether a task needs to run this tick or not.

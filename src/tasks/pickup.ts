@@ -1,6 +1,6 @@
-import { Action } from "intent";
-import { filterAllCreeps, hasAtLeastBodyParts } from "inventory";
-import { Logger } from "logging";
+import { Action } from "os/intent";
+import { filterAllCreeps, hasAtLeastBodyParts } from "os/inventory";
+import { Logger } from "utils/logging";
 
 export function assignPickupIntents(logger: Logger) {
   const creepsToPickup = filterAllCreeps(hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() > 0);
