@@ -57,14 +57,13 @@ function cleanupPhase(logger: Logger) {
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
   const logger = new Logger("main", config.logLevel);
+  logger.info("Starting game tick", { tick: Game.time });
 
   const intents = new IntentManager();
 
   intents.registerIntent(TransferIntent);
   intents.registerIntent(MineSource);
   intents.registerIntent(Pickup);
-
-  logger.info("Starting game tick", { tick: Game.time });
 
   // Create a new Scheduler that we can add tasks to.
   const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
