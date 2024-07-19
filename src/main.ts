@@ -3,6 +3,7 @@ import { Action, executeCreepIntent, Intent } from "intent";
 import { filterAllCreeps, hasAtLeastBodyParts } from "inventory";
 import { EveryXTicks, Scheduler } from "kernel";
 import { Logger, LogLevel } from "logging";
+import { assignPickupTasks, assignTransferTasks } from "tasks/pickup";
 import { ErrorMapper } from "utils/ErrorMapper";
 import doOrMove from "utils/doOrMove";
 
@@ -56,49 +57,12 @@ function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[]
     const name = baseName + i.toString();
 
     if (Game.creeps[name] === undefined) {
-      logger.info("spawning creep", { name: name })
+      logger.info("spawning creep", { name: name });
 
       const options = getOptions ? getOptions() : {};
       Game.spawns[spawnName].spawnCreep(parts, name, options);
     }
   }
-}
-
-function assignPickupTasks(logger: Logger) {
-  const creepsToPickup = filterAllCreeps(hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() > 0);
-
-  creepsToPickup.forEach((creep) => {
-    const target = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
-
-    if (!target) {
-      return;
-    }
-
-    creep.memory.intent = {
-      action: Action.Pickup,
-      target: target.id,
-    }
-  })
-}
-
-function assignTransferTasks(logger: Logger) {
-  const creepsToTransfer = filterAllCreeps(hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() === 0)
-
-  creepsToTransfer.forEach((creep) => {
-    var target: Structure | undefined | null = creep.room.controller;
-
-    if (!target) {
-      target = creep.pos.findClosestByPath(FIND_MY_SPAWNS);
-      if (!target) {
-        return
-      }
-    }
-
-    creep.memory.intent = {
-      action: Action.Transfer,
-      target: target.id,
-    }
-  })
 }
 
 function executeActions(logger: Logger) {
