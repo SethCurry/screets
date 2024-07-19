@@ -1,5 +1,6 @@
 import config from "config";
-import { Action, Intent } from "intent";
+import { Action, executeCreepIntent, Intent } from "intent";
+import { filterAllCreeps, hasAtLeastBodyParts } from "inventory";
 import { EveryXTicks, Scheduler } from "kernel";
 import { Logger, LogLevel } from "logging";
 import { ErrorMapper } from "utils/ErrorMapper";
@@ -63,50 +64,48 @@ function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[]
   }
 }
 
-function naiveMining(logger: Logger) {
-  for (const creepName in Game.creeps) {
-    if (!creepName.startsWith("Miner")) {
-      continue;
+function assignPickupTasks(logger: Logger) {
+  const creepsToPickup = filterAllCreeps(hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() > 0);
+
+  creepsToPickup.forEach((creep) => {
+    const target = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
+
+    if (!target) {
+      return;
     }
 
-    const creep = Game.creeps[creepName];
-    if (Game.time % 10 == 0) {
-      logger.debug("miner dropping resources", {name: creepName})
-      creep.drop(RESOURCE_ENERGY);
-    } else {
-      logger.debug("miner mining", {name: creepName})
-      const source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
-
-      doOrMove(creep, source.pos, 1, () => { creep.harvest(source) }, logger);
+    creep.memory.intent = {
+      action: Action.Pickup,
+      target: target.id,
     }
-  }
+  })
 }
 
-function naiveGathering(logger: Logger) {
-  for (const creepName in Game.creeps) {
-    if (!creepName.startsWith("Gatherer")) continue;
+function assignTransferTasks(logger: Logger) {
+  const creepsToTransfer = filterAllCreeps(hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() === 0)
 
+  creepsToTransfer.forEach((creep) => {
+    var target: Structure | undefined | null = creep.room.controller;
+
+    if (!target) {
+      target = creep.pos.findClosestByPath(FIND_MY_SPAWNS);
+      if (!target) {
+        return
+      }
+    }
+
+    creep.memory.intent = {
+      action: Action.Transfer,
+      target: target.id,
+    }
+  })
+}
+
+function executeActions(logger: Logger) {
+  for (const creepName in Game.creeps) {
     const creep = Game.creeps[creepName];
 
-    if (!creep.room.controller) {
-      continue
-    }
-
-    if (creep.pos.getRangeTo(creep.room.controller.pos.x, creep.room.controller.pos.y) <= 2 && creep.store.getUsedCapacity() > 0) {
-      logger.debug("gatherer still near controller; continuing transfer", { name: creepName })
-
-      creep.transfer(creep.room.controller, RESOURCE_ENERGY);
-    } else if (creep.store.getFreeCapacity() > 0) {
-      logger.debug("gatherer has free capacity; looking for dropped resources", { name: creepName })
-
-      const resource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES) as Resource;
-
-      doOrMove(creep, resource.pos, 1, () => {
-        creep.pickup(resource);
-      }, logger)
-    } else {
-      creep.moveTo(creep.room.controller);
-    }
+    executeCreepIntent(creep, logger);
   }
 }
 
@@ -141,9 +140,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
   scheduler.addTask("spawnBasicCreeps", EveryXTicks(1), (logger: Logger) => {
     basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], config.spawning.gatherers, "Gatherer")
   });
+  scheduler.addTask("assignTransferTasks", EveryXTicks(1), assignTransferTasks)
+  scheduler.addTask("assignPickupTasks", EveryXTicks(1), assignPickupTasks)
 
-  scheduler.addTask("doHarvesting", EveryXTicks(1), naiveMining)
-  scheduler.addTask("doGathering", EveryXTicks(1), naiveGathering)
+
+  scheduler.addTask("executeActions", EveryXTicks(1), executeActions)
   scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase)
 
   scheduler.schedule();

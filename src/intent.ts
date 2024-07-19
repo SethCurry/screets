@@ -33,9 +33,15 @@ function pickupExecutor(creep: Creep, intent: Intent, logger: Logger) {
   const execLogger = logger.child("pickup", { name : creep.name }) ;
   const target = Game.getObjectById(intent.target) as Resource;
 
+  if (creep.store.getFreeCapacity() === 0) {
+    creep.memory.intent = undefined
+    return
+  }
+
   doOrMove(creep, target.pos, 1, () => {
     execLogger.info("picking up resources");
     creep.pickup(target);
+    creep.memory.intent = undefined;
   }, logger)
 }
 
