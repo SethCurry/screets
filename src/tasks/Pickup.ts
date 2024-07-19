@@ -7,9 +7,23 @@ export function assignPickupIntents(creeps: Creep[], logger: Logger) {
   const creepsToPickup = filterCreeps(creeps, hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() > 0);
 
   creepsToPickup.forEach((creep) => {
-    const target = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
+    const droppedResources = creep.room.find(FIND_DROPPED_RESOURCES);
 
-    if (!target) {
+    if (droppedResources.length === 0) {
+      return
+    }
+
+    var highestAmount = 0;
+    var target = droppedResources[0];
+
+    droppedResources.forEach(rsc => {
+      if (rsc.amount > highestAmount) {
+        highestAmount = rsc.amount;
+        target = rsc;
+      }
+    })
+
+    if (target === null) {
       return;
     }
 

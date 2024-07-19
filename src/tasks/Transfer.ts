@@ -52,21 +52,22 @@ function transferExecutor(creep: Creep, intent: Intent, logger: Logger) {
     return;
   }
 
+  const asStore = structure as AnyStoreStructure;
+
+  if (asStore.store && asStore.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
+    creep.memory.intent = undefined;
+    return;
+  }
+
   var maxRange = 1;
 
   if (structure.structureType === STRUCTURE_CONTROLLER) {
     maxRange = 3;
   }
 
+
   doOrMove(creep, structure.pos, maxRange, () => {
     execLogger.debug("starting transfer of resource");
-
-    const asStore = structure as AnyStoreStructure;
-
-    if (asStore.store && asStore.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
-      creep.memory.intent = undefined;
-      return;
-    }
     creep.transfer(structure, RESOURCE_ENERGY);
   }, logger)
 }

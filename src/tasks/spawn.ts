@@ -43,9 +43,9 @@ export function spawnMinersMinimumTask(logger: Logger) {
 }
 
 export function spawnGatherersMinimumTask(logger: Logger) {
-  basicSpawn(logger, "Spawn1", [MOVE, WORK, WORK, CARRY], config.spawning.gatherers.minimum, "Gatherer");
+  basicSpawn(logger, "Spawn1", [MOVE, WORK, CARRY], config.spawning.gatherers.minimum, "Gatherer");
 }
 
 export function spawnGatherersPreferredTask(logger: Logger) {
-  basicSpawn(logger, "Spawn1", [MOVE, WORK, WORK, CARRY], config.spawning.gatherers.preferred, "Gatherer");
+  basicSpawn(logger, "Spawn1", [MOVE, WORK, CARRY], config.spawning.gatherers.preferred, "Gatherer");
 }
