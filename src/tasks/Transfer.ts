@@ -55,7 +55,7 @@ function transferExecutor(creep: Creep, intent: Intent, logger: Logger) {
   var maxRange = 1;
 
   if (structure.structureType === STRUCTURE_CONTROLLER) {
-    maxRange = 2;
+    maxRange = 3;
   }
 
   doOrMove(creep, structure.pos, maxRange, () => {
