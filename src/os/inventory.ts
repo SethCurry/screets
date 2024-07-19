@@ -37,7 +37,7 @@ export function hasAtLeastBodyParts(part: BodyPartConstant, partCount: number): 
 // together.
 export function filterCreeps(creeps: Creep[], ...filters: CreepFilter[]): Creep[] {
   return creeps.filter((c) => {
-    filters.map(f => f(c)).filter(v => v === false).length === 0;
+    return filters.map(f => f(c)).filter(v => v === false).length === 0;
   })
 }
 
