@@ -1,9 +1,20 @@
 import { LogLevel } from "utils/logging";
 
+interface SpawnConfig {
+  minimum: number;
+  preferred: number;
+}
+
 export default {
   logLevel: LogLevel.DEBUG,
   spawning: {
-    miners: 5,
-    gatherers: 3,
+    miners: {
+      minimum: 3,
+      preferred: 8,
+    },
+    gatherers: {
+      minimum: 1,
+      preferred: 5,
+    },
   }
 }

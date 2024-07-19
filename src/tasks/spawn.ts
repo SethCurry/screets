@@ -16,9 +16,7 @@ function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[]
   }
 }
 
-
-export function spawnMinersTask(logger: Logger) {
-  basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners, "Miner", () => {
+function createMinerIntent() {
     const source = Game.spawns["Spawn1"].pos.findClosestByPath(FIND_SOURCES_ACTIVE);
 
     if (source) {
@@ -33,9 +31,21 @@ export function spawnMinersTask(logger: Logger) {
     }
 
     return {}
-  });
 }
 
-export function spawnGatherersTask(logger: Logger) {
-  basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], config.spawning.gatherers, "Gatherer");
+
+export function spawnMinersPreferredTask(logger: Logger) {
+  basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners.preferred, "Miner", createMinerIntent);
+}
+
+export function spawnMinersMinimumTask(logger: Logger) {
+  basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners.preferred, "Miner", createMinerIntent);
+}
+
+export function spawnGatherersMinimumTask(logger: Logger) {
+  basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], config.spawning.gatherers.minimum, "Gatherer");
+}
+
+export function spawnGatherersPreferredTask(logger: Logger) {
+  basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], config.spawning.gatherers.preferred, "Gatherer");
 }

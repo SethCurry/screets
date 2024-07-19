@@ -5,8 +5,8 @@ import { Logger } from "./utils/logging";
 import TransferIntent from "tasks/Transfer";
 import MineSource from "./tasks/MineSource";
 import Pickup from "./tasks/Pickup";
-import { spawnGatherersTask, spawnMinersTask } from "tasks/spawn";
-import { ErrorMapper } from "utils/ErrorMapper";
+import { spawnGatherersMinimumTask, spawnGatherersPreferredTask, spawnMinersMinimumTask, spawnMinersPreferredTask } from "tasks/spawn";
+import { ErrorMapper } from "./utils/ErrorMapper";
 
 declare global {
   /*
@@ -70,11 +70,14 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   // Add a task that runs every tick to spawn miners if any are missing.
   // Configuration for how many to spawn is in config.ts
-  scheduler.addTask("spawnMiners", EveryXTicks(1), spawnMinersTask);
+  scheduler.addTask("spawnMinersPreferred", EveryXTicks(1), spawnMinersPreferredTask);
 
   // Add a task that runs every tick to spawn gatherers if any are missing.
   // Configuration for how many to spawn is in config.ts
-  scheduler.addTask("spawnGatherers", EveryXTicks(1), spawnGatherersTask);
+  scheduler.addTask("spawnGatherersPreferred", EveryXTicks(1), spawnGatherersPreferredTask);
+
+  scheduler.addTask("spawnGatherersMinimum", EveryXTicks(1), spawnGatherersMinimumTask);
+  scheduler.addTask("spawnMinersMinimum", EveryXTicks(1), spawnMinersMinimumTask);
 
   scheduler.addTask("assignWork", EveryXTicks(1), (logger: Logger) => {
     intents.assignTasks();

@@ -1,4 +1,4 @@
-import { Logger } from "utils/logging";
+import { Logger } from "./logging";
 
 interface Position {
   x: number;
