@@ -109,15 +109,7 @@ function executeActions(logger: Logger) {
   }
 }
 
-// When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
-// This utility uses source maps to get the line numbers and file names of the original, TS source code
-export const loop = ErrorMapper.wrapLoop(() => {
-  const logger = new Logger("main", config.logLevel);
-
-  logger.info("Starting game tick", { tick: Game.time });
-
-  const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
-
+function addSpawnTasks(scheduler: Scheduler) {
   scheduler.addTask("spawnMiners", EveryXTicks(1), (logger: Logger) => {
     basicSpawn(logger, "Spawn1", [WORK, MOVE], config.spawning.miners, "Miner", () => {
       const source = Game.spawns["Spawn1"].pos.findClosestByPath(FIND_SOURCES_ACTIVE);
@@ -137,12 +129,27 @@ export const loop = ErrorMapper.wrapLoop(() => {
     })
   });
 
-  scheduler.addTask("spawnBasicCreeps", EveryXTicks(1), (logger: Logger) => {
+  scheduler.addTask("spawnGatherers", EveryXTicks(1), (logger: Logger) => {
     basicSpawn(logger, "Spawn1", [WORK, MOVE, CARRY], config.spawning.gatherers, "Gatherer")
   });
+}
+
+function addWorkAssignmentTasks(scheduler: Scheduler) {
   scheduler.addTask("assignTransferTasks", EveryXTicks(1), assignTransferTasks)
   scheduler.addTask("assignPickupTasks", EveryXTicks(1), assignPickupTasks)
+}
 
+// When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
+// This utility uses source maps to get the line numbers and file names of the original, TS source code
+export const loop = ErrorMapper.wrapLoop(() => {
+  const logger = new Logger("main", config.logLevel);
+
+  logger.info("Starting game tick", { tick: Game.time });
+
+  const scheduler = new Scheduler(new Logger("scheduler", config.logLevel));
+
+  addSpawnTasks(scheduler);
+  addWorkAssignmentTasks(scheduler);
 
   scheduler.addTask("executeActions", EveryXTicks(1), executeActions)
   scheduler.addTask("cleanupPhase", EveryXTicks(1), cleanupPhase)
