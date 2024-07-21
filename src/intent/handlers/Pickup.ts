@@ -1,6 +1,6 @@
-import doOrMove from "../utils/doOrMove";
-import { Action, BasicIntentHandler, Intent } from "../os/intent";
-import { filterCreeps, hasAtLeastBodyParts } from "../os/inventory";
+import doOrMove from "../../utils/doOrMove";
+import { Action, BasicIntentHandler, Intent } from "../Intent";
+import { filterCreeps, hasAtLeastBodyParts } from "../../inventory/creeps";
 import { Logger } from "utils/logging";
 
 export function assignPickupIntents(creeps: Creep[], logger: Logger) {

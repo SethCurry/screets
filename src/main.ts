@@ -1,12 +1,14 @@
 import config from "./config";
-import { Intent, IntentManager } from "./os/intent";
-import { EveryXTicks, Scheduler } from "./os/kernel";
+import { Intent } from "./intent/Intent";
 import { Logger } from "./utils/logging";
-import TransferIntent from "tasks/Transfer";
-import MineSource from "./tasks/MineSource";
-import Pickup from "./tasks/Pickup";
-import { spawnGatherersMinimumTask, spawnGatherersPreferredTask, spawnMinersMinimumTask, spawnMinersPreferredTask } from "tasks/spawn";
+import TransferIntent from "intent/handlers/Transfer";
+import MineSource from "./intent/handlers/MineSource";
+import Pickup from "./intent/handlers/Pickup";
+import { spawnGatherersMinimumTask, spawnGatherersPreferredTask, spawnMinersMinimumTask, spawnMinersPreferredTask } from "intent/handlers/spawn";
 import { ErrorMapper } from "./utils/ErrorMapper";
+import { IntentManager } from "./intent/IntentManager";
+import EveryXTicks from "./os/scheduling/EveryXTicks";
+import Scheduler from "./os/scheduling/Scheduler";
 
 declare global {
   /*

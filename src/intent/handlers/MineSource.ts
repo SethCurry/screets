@@ -1,9 +1,9 @@
-import doOrMove from "../utils/doOrMove";
-import { Action, BasicIntentHandler, Intent } from "../os/intent";
-import { Logger } from "../utils/logging";
+import doOrMove from "../../utils/doOrMove";
+import { Action, Intent } from "../Intent";
+import { Logger } from "../../utils/logging";
 import { flatten } from "lodash";
-import { filterAllCreeps, filterCreeps, hasAtLeastBodyParts, hasTarget, lacksBodyPart } from "../os/inventory";
-import { createPrivateKey } from "crypto";
+import { filterAllCreeps, filterCreeps, hasAtLeastBodyParts, hasTarget, lacksBodyPart } from "../../inventory/creeps";
+import { BasicIntentHandler } from "../BasicIntentHandler";
 
 function countAdjacentPlains(pos: RoomPosition) {
   const room = Game.rooms[pos.roomName];

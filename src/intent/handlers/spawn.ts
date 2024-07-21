@@ -1,6 +1,6 @@
-import config from "../config";
-import { Action } from "../os/intent";
-import { Logger } from "../utils/logging";
+import config from "../../config";
+import { Action } from "../Intent";
+import { Logger } from "../../utils/logging";
 
 
 function basicSpawn(logger: Logger, spawnName: string, parts: BodyPartConstant[], maxNumber: number, baseName: string, getOptions?: () => SpawnOptions) {

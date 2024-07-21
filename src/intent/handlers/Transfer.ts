@@ -1,7 +1,7 @@
-import { Logger } from "../utils/logging";
-import { filterCreeps, hasAtLeastBodyParts } from "../os/inventory";
-import { Action, BasicIntentHandler, Intent } from "../os/intent";
-import doOrMove from "../utils/doOrMove";
+import { Logger } from "../../utils/logging";
+import { filterCreeps, hasAtLeastBodyParts } from "../../inventory/creeps";
+import { Action, BasicIntentHandler, Intent } from "../Intent";
+import doOrMove from "../../utils/doOrMove";
 
 function assignTransferIntents(creepsWithoutIntents: Creep[], logger: Logger) {
   const creepsToTransfer = filterCreeps(creepsWithoutIntents, hasAtLeastBodyParts(CARRY, 1), (creep) => creep.store.getFreeCapacity() === 0)
